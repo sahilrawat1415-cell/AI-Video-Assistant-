@@ -625,6 +625,64 @@ def sync_front_lang():
     st.session_state["speech_lang_key"] = st.session_state.get("front_lang_key", "english")
 
 
+DEMO_SESSIONS = {
+    "vb8WJgRAKUU": {
+        "title": "Mastering Self-Confidence & Daily High-Performance Habits",
+        "elapsed_time": 6.8,
+        "summary": "This session explores the psychological and neurological drivers behind genuine self-confidence and daily performance. The speaker emphasizes that confidence is not an innate personality trait, but rather an acquired behavioral reflex built through consistent Micro-Courage actions. Key methodologies discussed include the 5-second bias-to-action trigger, overcoming cognitive friction when starting daunting tasks, and decoupling personal identity from temporary setbacks to sustain momentum.",
+        "action_items": "- [01:45] Implement the 5-Second countdown rule to bridge the gap between intention and action before hesitation takes over.\n- [04:20] Establish a non-negotiable 30-minute morning deep-work block free from notifications and inbox checking.\n- [07:15] Maintain a daily 'Wins Journal' logging 3 completed actions each evening to reinforce positive neurological feedback loops.\n- [09:30] Schedule a weekly reflection session every Friday to audit time allocation and eliminate recurring friction points.",
+        "key_decisions": "- [02:30] Shift focus from outcome-based motivation to system-based execution to prevent burnout.\n- [05:10] Mandate single-task focus periods for all strategic initiatives, eliminating multitasking across deep deliverables.\n- [08:45] Decouple self-worth from project velocity, emphasizing consistent daily adherence over sporadic bursts of effort.",
+        "open_questions": "- [06:15] What objective metrics best calibrate individual habit consistency over extended quarterly cycles?\n- [10:05] How can team members best maintain accountability without introducing excessive administrative overhead?",
+        "transcript": "[00:00] Welcome everyone. Today we are diving into the science of genuine confidence and how daily behavioral habits shape performance.\n[00:45] Most people assume confidence is something you either have or you don't. But cognitive research shows it is actually a skill.\n[01:15] When you face hesitation, your brain is trying to protect you from uncertainty. If you wait more than 5 seconds, the brain will rationalize avoidance.\n[01:45] This is why the 5-second countdown rule is so effective: count backwards 5-4-3-2-1 and take immediate physical action.\n[02:30] We have decided to shift from outcome-based metrics to system-based execution. Focus on whether the system was run today.\n[03:15] Consistency compounds. Doing 20 minutes of uninterrupted focused effort every single day will outperform 8 hours of chaotic multitasking.\n[04:20] Action item: carve out a mandatory 30-minute distraction-free window each morning before checking email or Slack.\n[05:10] We also agreed that multitasking during key architecture reviews is completely banned. Single-threaded attention yields better decisions.\n[06:15] The open question remains: how do we track these micro-habits without making reporting cumbersome?\n[07:15] Another crucial habit: keep a daily wins journal. Record 3 tangible accomplishments before ending your day to retrain cognitive bias.\n[08:45] Decision: detach your personal identity from individual deliverables. Learn to view feedback as purely empirical data.\n[09:30] Everyone should set a calendar recurring block on Friday at 4 PM for their weekly retrospective.\n[10:05] Thank you everyone for joining today's briefing. Let's start implementing these systems immediately.",
+    },
+    "1wjFQsrXhK0": {
+        "title": "Deep Work & Focus: Engineering High-Output Routines",
+        "elapsed_time": 5.4,
+        "summary": "This briefing analyzes cognitive context-switching penalties, deep work batching, and energy management for technical teams. The speaker details how asynchronous communication protocols preserve cognitive flow states, why shallow tasks must be quarantined, and how 90-minute ultradian focus sprints maximize weekly architectural velocity without developer burnout.",
+        "action_items": "- [01:30] Restrict Slack and inbox triage to two fixed windows daily at 11:30 AM and 4:30 PM.\n- [03:45] Schedule mandatory 90-minute morning deep work blocks free from interruptions across all engineering pods.\n- [06:15] Audit operational alert channels and silence non-actionable notification noise.\n- [08:50] Implement a 15-minute shutdown ritual at the end of each workday to close open cognitive loops.",
+        "key_decisions": "- [02:15] Adopt async-first documentation for all project proposals before scheduling synchronous review meetings.\n- [04:50] Enforce a firm 4-hour weekly ceiling on recurring internal meetings per team member.\n- [07:30] Default to threaded Slack conversations rather than impromptu huddles for technical problem solving.",
+        "open_questions": "- [05:40] How can we best support on-call rotation engineers during intense deep-work sprint periods?\n- [09:15] Which automated tooling can track team focus time without feeling intrusive or micromanaged?",
+        "transcript": "[00:00] Hi everyone. In this session we are breaking down how to structure deep work routines and eliminate cognitive context switching.\n[00:40] Every time you switch from deep coding to check an email or Slack notification, it takes an average of 23 minutes to regain full focus.\n[01:30] Action item: establish two fixed triage windows daily at 11:30 AM and 4:30 PM. Outside these windows, notifications remain muted.\n[02:15] Our key decision is adopting an async-first workflow. All proposals must be written before any sync meeting can be scheduled.\n[03:45] Next action item: engineer pods must protect a non-negotiable 90-minute deep work block every morning.\n[04:50] We are officially capping recurring meetings at 4 hours per engineer per week. Cancel any meeting without a clear agenda.\n[06:15] Audit team alerting channels. Over 40 percent of our alert pings are informational noise that interrupts deep focus.\n[07:30] Use threaded discussions rather than impromptu calls so context is preserved for the entire team.\n[08:50] End each day with a 15-minute shutdown ritual to organize tomorrow's top three high-impact objectives.\n[09:45] Thanks everyone. Let us protect our focus time and maximize our build velocity.",
+    },
+    "Bhn71mwOjsA": {
+        "title": "High-Pressure Communication & Clarification Strategies (Hinglish)",
+        "elapsed_time": 6.1,
+        "summary": "Ye briefing technical meetings me pressure ke under articulate karne aur clarity maintain karne par focus karti hai. Discussion me PREP framework (Point, Reason, Example, Point) use karna, 3-second strategic pause lena, aur ambiguous client expectations ko systematically clarify karna explain kiya gaya hai.",
+        "action_items": "- [02:10] Jab bhi difficult architecture questions ayein, PREP framework use karke structured response deliver karein.\n- [04:30] High-pressure questions ke baad 3-second strategic pause lena mandatory karein before answering.\n- [07:20] Client sync me verbally agree karne ke baad within 2 hours written recap document share karein.\n- [09:40] Junior engineers ke liye bi-weekly mock technical Q&A sessions schedule karein.",
+        "key_decisions": "- [03:00] Direct technical answers hamesha pehle dein, background story aur context baad me elaborate karein.\n- [05:45] Unclear requirements par assumptions lene ki jagah instant follow-up clarification maangna standard protocol hoga.\n- [08:15] Client meetings me technical lead hamesha final scope boundary confirm karega.",
+        "open_questions": "- [06:30] High-pressure scenarios me team members ka anxiety response kaise reduce kiya jaye?\n- [10:15] Hinglish code-mixed discussions ko internal knowledge base me standardize kaise record karein?",
+        "transcript": "[00:00] Namaste team. Aaj ka discussion communication under high pressure and difficult questions handle karne par hai.\n[00:50] Jab meetings me difficult cross-questions aate hain, toh instinctive reaction hota hai bina soche immediately answer dena.\n[01:35] But cognitive science kehti hai ki rushing creates anxiety and mistakes. Always take a 3-second pause to collect your thoughts.\n[02:10] Action item: PREP framework follow karein — Point pehle, phir Reason, then Example, and restate your Point.\n[03:00] Hamara decision ye hai ki answers hamesha bottom-line first hone chahiye. Background narrative baad me elaborate karein.\n[04:30] Always pause before replying. Wo 3 seconds apko composed aur authoritative look dete hain.\n[05:45] Agar client requirement ambiguous hai, toh assume mat kijiye. Follow-up clarification maangna mandatory policy banayi gayi hai.\n[07:20] Sync call khatam hone ke 2 ghante ke andar bullet-point summary circulate karna zaroori hai.\n[08:15] Scope discussions me final boundary hamesha technical lead hi confirm karega.\n[09:40] Junior engineers ke liye bi-weekly mock Q&A sessions initiate karein to build real speaking confidence.\n[10:30] Thank you sabhi ko. Ye protocols kal se active implementations me apply honge.",
+    },
+}
+
+
+def load_demo_session(demo_key: str):
+    """Loads a pre-bundled demo session instantly without requiring YouTube downloads."""
+    demo = DEMO_SESSIONS.get(demo_key)
+    if not demo:
+        return
+    st.session_state.result = {
+        "title":            demo["title"],
+        "summary":          demo["summary"],
+        "action_items":     demo["action_items"],
+        "key_decisions":    demo["key_decisions"],
+        "open_questions":   demo["open_questions"],
+        "transcript":       demo["transcript"],
+        "plain_transcript": demo["transcript"],
+        "video_id":         demo_key,
+        "rag_chain":        None,
+    }
+    st.session_state.elapsed_time = demo.get("elapsed_time", 5.2)
+    st.session_state.pipeline_done = True
+    try:
+        from core.rag_engine import build_rag_chain
+        chain = build_rag_chain(demo["transcript"], video_id=demo_key)
+        st.session_state.result["rag_chain"] = chain
+        st.session_state.rag_chain = chain
+    except Exception as e:
+        print(f"Demo RAG error: {e}")
+
+
 def set_demo_url(url: str, lang: str = "english"):
     st.session_state["source_input_url"] = url
     st.session_state["front_source_input"] = url
@@ -865,7 +923,7 @@ with st.sidebar:
     st.markdown('<div class="card-header-label">01 · Input Source</div>', unsafe_allow_html=True)
     input_mode = st.radio(
         "Choose Input Method",
-        ["YouTube / Local Path", "Upload Media File"],
+        ["Upload Media File", "YouTube / Local Path"],
         label_visibility="collapsed",
     )
 
@@ -1367,7 +1425,7 @@ else:
         with f_mode_col1:
             front_input_mode = st.radio(
                 "Choose Front Method",
-                ["YouTube / Local Path", "Upload Media File"],
+                ["Upload Media File", "YouTube / Local Path"],
                 key="front_input_mode",
                 label_visibility="collapsed",
             )
@@ -1375,7 +1433,33 @@ else:
         front_source_val = ""
         front_run_btn = False
         with f_mode_col2:
-            if front_input_mode == "YouTube / Local Path":
+            if front_input_mode == "Upload Media File":
+                front_uploaded = st.file_uploader(
+                    "Upload MP4, MP3, WAV, or M4A",
+                    type=["mp4", "mp3", "wav", "m4a", "webm", "mkv"],
+                    key="front_uploaded_file",
+                    label_visibility="collapsed",
+                )
+                if front_uploaded is not None:
+                    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+                    saved_path = os.path.join(DOWNLOAD_DIR, front_uploaded.name)
+                    with open(saved_path, "wb") as f:
+                        f.write(front_uploaded.getbuffer())
+                    front_source_val = saved_path
+                    st.caption(f"📁 Ready to analyze: `{front_uploaded.name}`")
+
+                f_col_lang, f_col_btn = st.columns([2.5, 1.5], gap="small")
+                with f_col_lang:
+                    front_lang = st.selectbox(
+                        "Speech Model",
+                        ["english", "hinglish"],
+                        key="front_lang_file_key",
+                        format_func=lambda x: "🎙️ English (Groq Whisper)" if x == "english" else "🎙️ Hinglish (Sarvam AI)",
+                        label_visibility="collapsed",
+                    )
+                with f_col_btn:
+                    front_run_btn = st.button("⚡ Analyse Media File", key="front_run_file_btn", type="primary", use_container_width=True)
+            else:
                 f_col_url, f_col_lang, f_col_btn = st.columns([3.1, 1.35, 1.35], gap="small")
                 with f_col_url:
                     front_source_val = st.text_input(
@@ -1396,32 +1480,6 @@ else:
                     )
                 with f_col_btn:
                     front_run_btn = st.button("⚡ Analyse", key="front_run_yt_btn", type="primary", use_container_width=True)
-            else:
-                f_col_file, f_col_lang, f_col_btn = st.columns([3.1, 1.35, 1.35], gap="small")
-                with f_col_file:
-                    front_uploaded = st.file_uploader(
-                        "Upload MP4, MP3, WAV, or M4A",
-                        type=["mp4", "mp3", "wav", "m4a", "webm", "mkv"],
-                        key="front_uploaded_file",
-                        label_visibility="collapsed",
-                    )
-                    if front_uploaded is not None:
-                        os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-                        saved_path = os.path.join(DOWNLOAD_DIR, front_uploaded.name)
-                        with open(saved_path, "wb") as f:
-                            f.write(front_uploaded.getbuffer())
-                        front_source_val = saved_path
-                        st.caption(f"📁 Ready to analyze: `{front_uploaded.name}`")
-                with f_col_lang:
-                    front_lang = st.selectbox(
-                        "Speech Model",
-                        ["english", "hinglish"],
-                        key="front_lang_file_key",
-                        format_func=lambda x: "🎙️ English" if x == "english" else "🎙️ Hinglish",
-                        label_visibility="collapsed",
-                    )
-                with f_col_btn:
-                    front_run_btn = st.button("⚡ Analyse", key="front_run_file_btn", type="primary", use_container_width=True)
 
     if front_run_btn:
         run_analysis_pipeline(front_source_val, front_lang)
@@ -1479,8 +1537,8 @@ else:
             "▶️ Confidence & Habits\n(English · Groq Whisper)",
             use_container_width=True,
             type="secondary",
-            on_click=set_demo_url,
-            args=("https://youtu.be/vb8WJgRAKUU", "english"),
+            on_click=load_demo_session,
+            args=("vb8WJgRAKUU",),
             key="main_demo_1",
         )
 
@@ -1489,8 +1547,8 @@ else:
             "▶️ Productivity & Focus\n(English · Groq Whisper)",
             use_container_width=True,
             type="secondary",
-            on_click=set_demo_url,
-            args=("https://youtu.be/1wjFQsrXhK0", "english"),
+            on_click=load_demo_session,
+            args=("1wjFQsrXhK0",),
             key="main_demo_2",
         )
 
@@ -1499,7 +1557,7 @@ else:
             "▶️ Hinglish / Code-Mixed\n(Hinglish · Sarvam AI)",
             use_container_width=True,
             type="secondary",
-            on_click=set_demo_url,
-            args=("https://youtu.be/Bhn71mwOjsA", "hinglish"),
+            on_click=load_demo_session,
+            args=("Bhn71mwOjsA",),
             key="main_demo_3",
         )
