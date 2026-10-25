@@ -71,7 +71,8 @@ def _get_cookie_file() -> str | None:
 
 
 def download_youtube_audio(url: str) -> str:
-    """Fast audio download: checks cache first, uses modern clients and JS challenge solving to avoid bot blocks."""
+    """Fast audio download: checks cache first, uses Chrome TLS impersonation, mobile clients, and JS challenge solving to avoid bot blocks."""
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     vid = _extract_yt_id(url)
     target_url = url.strip()
     if vid and not target_url.startswith(("http://", "https://")):
@@ -84,6 +85,16 @@ def download_youtube_audio(url: str) -> str:
                 print(f"⚡ Cache hit: using already downloaded audio for video ID '{vid}': {f}")
                 return f
 
+    # Detect browser impersonation target from curl-cffi (bypasses datacenter 403 Forbidden on AWS/Streamlit Cloud)
+    impersonate_target = None
+    try:
+        from yt_dlp.networking.impersonate import ImpersonateTarget
+        impersonate_target = ImpersonateTarget.from_str("chrome")
+    except Exception:
+        pass
+
+    cookie_file = _get_cookie_file()
+
     base_opts = {
         # Prioritize lightweight audio-only streams (3-5MB) instead of heavy video
         "format": "ba[ext=m4a]/ba[ext=webm]/ba/b[height<=360]/b",
@@ -91,34 +102,53 @@ def download_youtube_audio(url: str) -> str:
         "geo_bypass": True,
         "nocheckcertificate": True,
         "remote_components": ["ejs:github"],
-        "socket_timeout": 15,
-        "retries": 2,
+        "socket_timeout": 20,
+        "retries": 3,
         "quiet": True,
         "no_warnings": True,
     }
+    if impersonate_target:
+        base_opts["impersonate"] = impersonate_target
 
-    cookie_file = _get_cookie_file()
+    # Attempt 1: Chrome TLS impersonation with cookies if provided
+    opts_with_cookie = dict(base_opts)
     if cookie_file:
-        base_opts["cookiefile"] = cookie_file
-
-    # Attempt 1: Standard extraction with automated Deno JS challenge solving
+        opts_with_cookie["cookiefile"] = cookie_file
     try:
-        with yt_dlp.YoutubeDL(base_opts) as ydl:
+        with yt_dlp.YoutubeDL(opts_with_cookie) as ydl:
             info = ydl.extract_info(target_url, download=True)
             downloaded_file = ydl.prepare_filename(info)
 
-            if not os.path.exists(downloaded_file):
-                video_id = info.get("id")
-                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+            if not os.path.exists(downloaded_file) and vid:
+                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
                 if matches:
                     downloaded_file = matches[0]
 
             if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                print("⚡ Successfully downloaded using Chrome TLS impersonation!")
                 return downloaded_file
     except Exception as err1:
-        print(f"Standard download attempt failed ({err1}). Retrying with modern fallback clients...")
+        print(f"Attempt 1 failed ({err1}). Retrying with alternate strategy...")
 
-    # Attempt 2: Fallback with modern mobile/web clients (avoid deprecated 'tv' which triggers 'page needs to be reloaded')
+    # Attempt 2: Chrome TLS impersonation WITHOUT cookies (in case provided cookies are expired or triggering login redirects)
+    if cookie_file:
+        try:
+            with yt_dlp.YoutubeDL(base_opts) as ydl:
+                info = ydl.extract_info(target_url, download=True)
+                downloaded_file = ydl.prepare_filename(info)
+
+                if not os.path.exists(downloaded_file) and vid:
+                    matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
+                    if matches:
+                        downloaded_file = matches[0]
+
+                if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                    print("⚡ Successfully downloaded using Chrome TLS impersonation (clean session)!")
+                    return downloaded_file
+        except Exception as err2:
+            print(f"Attempt 2 (clean session) failed ({err2}). Retrying with mobile clients...")
+
+    # Attempt 3: Modern mobile/web clients (android, ios, mweb) with Chrome impersonation
     fallback_opts = dict(base_opts)
     fallback_opts["format"] = "bestaudio/best"
     fallback_opts["extractor_args"] = {
@@ -131,25 +161,25 @@ def download_youtube_audio(url: str) -> str:
             info = ydl.extract_info(target_url, download=True)
             downloaded_file = ydl.prepare_filename(info)
 
-            if not os.path.exists(downloaded_file):
-                video_id = info.get("id")
-                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+            if not os.path.exists(downloaded_file) and vid:
+                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
                 if matches:
                     downloaded_file = matches[0]
 
             if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                print("⚡ Successfully downloaded using mobile/web fallback clients!")
                 return downloaded_file
-    except Exception as err2:
-        print(f"Modern fallback clients attempt failed ({err2}). Trying clean Android client...")
+    except Exception as err3:
+        print(f"Attempt 3 (mobile clients) failed ({err3}). Trying clean Android client...")
 
-    # Attempt 3: Direct Android client extraction without cookies (bypasses datacenter 403 blocks & PO Token requirements)
+    # Attempt 4: Direct Android client extraction without cookies (bypasses datacenter 403 blocks & PO Token requirements)
     android_opts = {
         "format": "ba[ext=m4a]/ba[ext=webm]/ba/b[height<=360]/b",
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "geo_bypass": True,
         "nocheckcertificate": True,
-        "socket_timeout": 15,
-        "retries": 2,
+        "socket_timeout": 20,
+        "retries": 3,
         "quiet": True,
         "no_warnings": True,
         "extractor_args": {
@@ -163,19 +193,18 @@ def download_youtube_audio(url: str) -> str:
             info = ydl.extract_info(target_url, download=True)
             downloaded_file = ydl.prepare_filename(info)
 
-            if not os.path.exists(downloaded_file):
-                video_id = info.get("id")
-                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+            if not os.path.exists(downloaded_file) and vid:
+                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
                 if matches:
                     downloaded_file = matches[0]
 
             if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
                 print("⚡ Successfully downloaded using clean Android client!")
                 return downloaded_file
-    except Exception as err3:
-        print(f"Android client download attempt failed ({err3}). Trying browser cookies fallback...")
+    except Exception as err4:
+        print(f"Attempt 4 (Android client) failed ({err4}). Trying browser cookies fallback...")
 
-    # Attempt 4: If running locally without cookies.txt, attempt reading cookies from installed browsers
+    # Attempt 5: If running locally without cookies.txt, attempt reading cookies from installed browsers
     if not cookie_file:
         for browser in ["chrome", "edge", "firefox", "brave"]:
             try:
@@ -185,9 +214,8 @@ def download_youtube_audio(url: str) -> str:
                     info = ydl.extract_info(target_url, download=True)
                     downloaded_file = ydl.prepare_filename(info)
 
-                    if not os.path.exists(downloaded_file):
-                        video_id = info.get("id")
-                        matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+                    if not os.path.exists(downloaded_file) and vid:
+                        matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
                         if matches:
                             downloaded_file = matches[0]
 
@@ -199,8 +227,9 @@ def download_youtube_audio(url: str) -> str:
 
     if vid:
         matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
-        if matches and os.path.getsize(matches[0]) > 1000:
-            return matches[0]
+        for m in matches:
+            if os.path.isfile(m) and os.path.getsize(m) > 1000 and not m.endswith(".part"):
+                return m
 
     raise RuntimeError(
         "YouTube blocked media stream download requests (anti-bot challenge / 403 Forbidden). "
