@@ -140,9 +140,42 @@ def download_youtube_audio(url: str) -> str:
             if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
                 return downloaded_file
     except Exception as err2:
-        print(f"Modern fallback clients attempt failed ({err2}). Trying browser cookies fallback...")
+        print(f"Modern fallback clients attempt failed ({err2}). Trying clean Android client...")
 
-    # Attempt 3: If running locally without cookies.txt, attempt reading cookies from installed browsers
+    # Attempt 3: Direct Android client extraction without cookies (bypasses datacenter 403 blocks & PO Token requirements)
+    android_opts = {
+        "format": "ba[ext=m4a]/ba[ext=webm]/ba/b[height<=360]/b",
+        "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
+        "geo_bypass": True,
+        "nocheckcertificate": True,
+        "socket_timeout": 15,
+        "retries": 2,
+        "quiet": True,
+        "no_warnings": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android"]
+            }
+        }
+    }
+    try:
+        with yt_dlp.YoutubeDL(android_opts) as ydl:
+            info = ydl.extract_info(target_url, download=True)
+            downloaded_file = ydl.prepare_filename(info)
+
+            if not os.path.exists(downloaded_file):
+                video_id = info.get("id")
+                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+                if matches:
+                    downloaded_file = matches[0]
+
+            if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                print("⚡ Successfully downloaded using clean Android client!")
+                return downloaded_file
+    except Exception as err3:
+        print(f"Android client download attempt failed ({err3}). Trying browser cookies fallback...")
+
+    # Attempt 4: If running locally without cookies.txt, attempt reading cookies from installed browsers
     if not cookie_file:
         for browser in ["chrome", "edge", "firefox", "brave"]:
             try:

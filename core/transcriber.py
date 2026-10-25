@@ -340,32 +340,59 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
                 t_list = api.list(vid)
                 t = None
                 try:
-                    t = t_list.find_transcript(['en', 'en-US', 'en-GB', 'hi', 'en-orig'])
+                    t = t_list.find_transcript(['en', 'en-US', 'en-GB', 'hi', 'en-orig', 'hi-Latn'])
                 except Exception:
-                    for item in t_list:
-                        t = item
-                        break
-                if t and hasattr(t, "_url") and t._url:
-                    # Crucial: fetch timedtext URL with clean requests (no session cookies) to prevent 502 Bad Gateway
-                    resp = requests.get(t._url, timeout=15)
-                    if resp.status_code == 200 and resp.text:
-                        raw_segments = _TranscriptParser().parse(resp.text)
-                        if raw_segments:
+                    try:
+                        t = t_list.find_generated_transcript(['en', 'en-US', 'hi'])
+                    except Exception:
+                        for item in t_list:
+                            t = item
                             break
+                if t:
+                    # Method A: Fetch timedtext with clean browser headers (fixes AWS datacenter blocks & 502)
+                    if hasattr(t, "_url") and t._url:
+                        try:
+                            clean_headers = {
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+                                "Accept": "*/*",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Referer": "https://www.youtube.com/",
+                            }
+                            resp = requests.get(t._url, headers=clean_headers, timeout=15)
+                            if resp.status_code == 200 and resp.text:
+                                raw_segments = _TranscriptParser().parse(resp.text)
+                                if raw_segments:
+                                    break
+                        except Exception:
+                            pass
+
+                    # Method B: Native t.fetch() fallback
+                    if not raw_segments and hasattr(t, "fetch"):
+                        try:
+                            raw_segments = t.fetch()
+                            if raw_segments:
+                                break
+                        except Exception:
+                            pass
             except Exception as e_disc:
                 print(f"Transcript discovery attempt failed: {e_disc}")
 
-        # Strategy 2: Direct api.fetch fallback
+        # Strategy 2: Direct api.fetch fallback with session cookies
         if not raw_segments:
-            try:
-                api = YouTubeTranscriptApi()
-                raw_segments = api.fetch(vid)
-            except Exception:
+            for cl in [session, None]:
                 try:
-                    api = YouTubeTranscriptApi()
-                    raw_segments = api.fetch(vid, languages=['en', 'en-US', 'hi'])
+                    api = YouTubeTranscriptApi(http_client=cl) if cl else YouTubeTranscriptApi()
+                    raw_segments = api.fetch(vid)
+                    if raw_segments:
+                        break
                 except Exception:
-                    pass
+                    try:
+                        api = YouTubeTranscriptApi(http_client=cl) if cl else YouTubeTranscriptApi()
+                        raw_segments = api.fetch(vid, languages=['en', 'en-US', 'hi'])
+                        if raw_segments:
+                            break
+                    except Exception:
+                        pass
 
         # Strategy 3: Legacy get_transcript API fallback
         if not raw_segments:
