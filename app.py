@@ -1105,7 +1105,14 @@ def run_analysis_pipeline(target_source: str, target_lang: str):
                 st.session_state.pipeline_steps[k] = "pending"
         render_sidebar_steps(sidebar_status_box)
         prog_bar.empty()
-        banner.error(f"Pipeline Error: {e}")
+        err_msg = str(e)
+        banner.error(f"Pipeline Error: {err_msg}")
+        if "403" in err_msg or "Forbidden" in err_msg:
+            st.warning(
+                "💡 **YouTube 403 Forbidden Fix:**\n\n"
+                "Cloud datacenter IP addresses (like Streamlit Cloud / AWS) are frequently blocked by YouTube's anti-bot system.\n\n"
+                "**Recommended Action:** Use the **'Upload Media File'** option on the sidebar to upload your video/audio file directly!"
+            )
 
 
 if run_btn:
