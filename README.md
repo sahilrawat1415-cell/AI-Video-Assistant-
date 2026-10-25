@@ -1,27 +1,27 @@
-# 🎬 AI Video Assistant With RAG & Multilingual Intelligence
+# AI Video Assistant With RAG & Multilingual Intelligence
 
 An enterprise-ready AI meeting and video intelligence system built with **FastAPI**, **Streamlit**, **LangChain**, **Groq**, **Sarvam AI**, and **ChromaDB**. It transcribes English and Hinglish videos, generates structured executive insights, and provides timestamp-grounded Retrieval-Augmented Generation (RAG) chat.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-* 🎙️ **Intelligent Multilingual STT**:
+* **Intelligent Multilingual STT**:
   * **English**: Uses **Groq Whisper-large-v3-turbo** for near-instant, highly accurate transcription with segment timestamps.
   * **Hinglish**: Routes code-mixed Hindi-English meeting recordings to **Sarvam AI (saaras:v2.5)**.
-* ⏱️ **Timestamp-Grounded RAG**: Answers cite exact timestamps (e.g., `[02:15]`) so you can jump directly to where a topic was spoken.
-* 📚 **Multi-Video Session Library**: ChromaDB persists indexed sessions with a searchable video catalog; easily switch between meetings without re-processing.
-* ⚡ **High-Speed FFmpeg Audio Chunking**: Stream-segments audio into lightweight 16kHz mono MP3 chunks to minimize memory footprint and latency.
-* 📝 **Map-Reduce Summarization**: Transcripts exceeding 10,000 characters automatically run through a concurrent map-reduce LLM pipeline to preserve all critical facts.
-* 🎯 **Structured Insights Extraction**: Automatically pulls **Action Items**, **Key Decisions**, and **Follow-up Questions**.
-* 🔌 **Dual-Mode Architecture**:
+* **Timestamp-Grounded RAG**: Answers cite exact timestamps (e.g., `[02:15]`) so you can jump directly to where a topic was spoken.
+* **Multi-Video Session Library**: ChromaDB persists indexed sessions with a searchable video catalog; easily switch between meetings without re-processing.
+* **High-Speed FFmpeg Audio Chunking**: Stream-segments audio into lightweight 16kHz mono MP3 chunks to minimize memory footprint and latency.
+* **Map-Reduce Summarization**: Transcripts exceeding 10,000 characters automatically run through a concurrent map-reduce LLM pipeline to preserve all critical facts.
+* **Structured Insights Extraction**: Automatically pulls **Action Items**, **Key Decisions**, and **Follow-up Questions**.
+* **Dual-Mode Architecture**:
   * **REST API** powered by FastAPI (with OpenAPI / Swagger docs).
   * **Interactive Web App** powered by Streamlit with custom styling (*Syne* & *JetBrains Mono*).
   * **Terminal CLI** for automated scripting.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                           ┌──────────────────────────┐
@@ -71,7 +71,7 @@ An enterprise-ready AI meeting and video intelligence system built with **FastAP
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### Prerequisites
 * Python 3.10+
@@ -81,8 +81,8 @@ An enterprise-ready AI meeting and video intelligence system built with **FastAP
 ### 1. Clone & Set Up Environment
 
 ```bash
-git clone https://github.com/your-username/AI-Video-Assistant-With-RAG.git
-cd "AI-Video-Assistant-With-RAG"
+git clone https://github.com/sahilrawat1415-cell/AI-Video-Assistant-.git
+cd AI-Video-Assistant-
 
 # Create and activate virtual environment
 python -m venv .venv
@@ -95,7 +95,7 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment Variables
 
-Create or update `.env` in the root folder:
+Create `.env` in the root folder based on `.env.example`:
 
 ```env
 GROQ_API_KEY="your_groq_api_key_here"
@@ -107,7 +107,7 @@ USE_LOCAL_WHISPER="false"
 
 ---
 
-## 💻 Running the Application
+## Running the Application
 
 ### Option A: Streamlit Web UI (All-in-One)
 
@@ -144,7 +144,7 @@ python main.py
 
 ---
 
-## 📡 REST API Reference
+## REST API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -187,7 +187,7 @@ python main.py
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── core/
@@ -205,11 +205,6 @@ python main.py
 ├── main.py                # Command-line interface runner
 ├── requirements.txt       # Project dependencies
 ├── .gitignore             # Git exclusion rules
+├── .env.example           # Example environment configuration
 └── README.md              # Project documentation
 ```
-
----
-
-## 🛡️ License
-
-Distributed under the MIT License. Feel free to use and adapt this project for your own applications.
