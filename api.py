@@ -49,6 +49,8 @@ _state: Dict[str, Any] = {
 def extract_video_id(source: str) -> str:
     """Extracts a clean unique identifier from a YouTube URL or file path."""
     s = str(source).strip()
+    if len(s) == 11 and re.match(r"^[a-zA-Z0-9_-]{11}$", s):
+        return s
     if "youtu.be/" in s:
         return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
     if "youtube.com/watch" in s:
@@ -123,7 +125,9 @@ def run_video_ingestion(video_url: str, language: str = "english") -> Dict[str, 
         video_id = extract_video_id(video_url)
 
         transcript = None
-        if video_url.startswith(("http://", "https://")) and ("youtube.com" in video_url or "youtu.be" in video_url):
+        from core.transcriber import extract_youtube_id
+        yt_id = extract_youtube_id(video_url.strip())
+        if yt_id:
             try:
                 transcript = get_youtube_transcript(video_url.strip())
             except Exception as e:

@@ -281,9 +281,11 @@ def transcribe_all(chunks: list[str], language: str = "english", progress_callba
 
 
 def extract_youtube_id(url: str) -> str:
-    """Extracts YouTube 11-char video ID from various URL formats."""
+    """Extracts YouTube 11-char video ID from various URL formats or raw video ID."""
     import re
     s = str(url).strip()
+    if len(s) == 11 and re.match(r"^[a-zA-Z0-9_-]{11}$", s):
+        return s
     if "youtu.be/" in s:
         return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
     if "youtube.com/watch" in s:
@@ -321,25 +323,34 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
                 pass
 
         raw_segments = None
-        # Try 1: with session / cookies
+        # Try 1: with session / cookies with language preferences
         try:
             api = YouTubeTranscriptApi(http_client=session)
-            raw_segments = api.fetch(vid)
+            raw_segments = api.fetch(vid, languages=['en', 'en-US', 'en-GB', 'hi'])
         except Exception:
-            pass
-
-        # Try 2: clean default client
-        if not raw_segments:
             try:
-                api = YouTubeTranscriptApi()
+                api = YouTubeTranscriptApi(http_client=session)
                 raw_segments = api.fetch(vid)
             except Exception:
                 pass
 
-        # Try 3: legacy get_transcript API
+        # Try 2: clean default client with language preferences
         if not raw_segments:
             try:
-                raw_segments = YouTubeTranscriptApi.get_transcript(vid)
+                api = YouTubeTranscriptApi()
+                raw_segments = api.fetch(vid, languages=['en', 'en-US', 'en-GB', 'hi'])
+            except Exception:
+                try:
+                    api = YouTubeTranscriptApi()
+                    raw_segments = api.fetch(vid)
+                except Exception:
+                    pass
+
+        # Try 3: legacy get_transcript API fallback
+        if not raw_segments:
+            try:
+                if hasattr(YouTubeTranscriptApi, "get_transcript"):
+                    raw_segments = YouTubeTranscriptApi.get_transcript(vid)
             except Exception:
                 pass
 

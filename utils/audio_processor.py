@@ -12,6 +12,8 @@ import re
 
 def _extract_yt_id(url: str) -> str:
     s = str(url).strip()
+    if len(s) == 11 and re.match(r"^[a-zA-Z0-9_-]{11}$", s):
+        return s
     if "youtu.be/" in s:
         return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
     if "youtube.com/watch" in s:
@@ -56,8 +58,12 @@ def _get_cookie_file() -> str | None:
 
 
 def download_youtube_audio(url: str) -> str:
-    """Fast audio download: checks cache first, and strictly downloads audio-only streams to avoid 50MB+ video overhead."""
+    """Fast audio download: checks cache first, uses modern clients and JS challenge solving to avoid bot blocks."""
     vid = _extract_yt_id(url)
+    target_url = url.strip()
+    if vid and not target_url.startswith(("http://", "https://")):
+        target_url = f"https://www.youtube.com/watch?v={vid}"
+
     if vid:
         existing = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
         for f in existing:
@@ -71,13 +77,9 @@ def download_youtube_audio(url: str) -> str:
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "geo_bypass": True,
         "nocheckcertificate": True,
-        "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-        },
-        "socket_timeout": 10,
-        "retries": 1,
+        "remote_components": ["ejs:github"],
+        "socket_timeout": 15,
+        "retries": 2,
         "quiet": True,
         "no_warnings": True,
     }
@@ -86,10 +88,10 @@ def download_youtube_audio(url: str) -> str:
     if cookie_file:
         base_opts["cookiefile"] = cookie_file
 
-    # Attempt 1: Standard extraction (uses default tv_samsung / web clients without GVS PO token requirements)
+    # Attempt 1: Standard extraction with automated Deno JS challenge solving
     try:
         with yt_dlp.YoutubeDL(base_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+            info = ydl.extract_info(target_url, download=True)
             downloaded_file = ydl.prepare_filename(info)
 
             if not os.path.exists(downloaded_file):
@@ -101,41 +103,64 @@ def download_youtube_audio(url: str) -> str:
             if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
                 return downloaded_file
     except Exception as err1:
-        print(f"Standard download attempt failed ({err1}). Retrying with fallback options...")
-        # Attempt 2: Fallback with tv client or alternate format if 403 or format error occurred
-        fallback_opts = dict(base_opts)
-        fallback_opts["format"] = "bestaudio/best"
-        fallback_opts["extractor_args"] = {
-            "youtube": {
-                "player_client": ["tv", "web"],
-            }
+        print(f"Standard download attempt failed ({err1}). Retrying with modern fallback clients...")
+
+    # Attempt 2: Fallback with modern mobile/web clients (avoid deprecated 'tv' which triggers 'page needs to be reloaded')
+    fallback_opts = dict(base_opts)
+    fallback_opts["format"] = "bestaudio/best"
+    fallback_opts["extractor_args"] = {
+        "youtube": {
+            "player_client": ["android", "ios", "mweb", "web_safari"],
         }
-        try:
-            with yt_dlp.YoutubeDL(fallback_opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                downloaded_file = ydl.prepare_filename(info)
+    }
+    try:
+        with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+            info = ydl.extract_info(target_url, download=True)
+            downloaded_file = ydl.prepare_filename(info)
 
-                if not os.path.exists(downloaded_file):
-                    video_id = info.get("id")
-                    matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
-                    if matches:
-                        downloaded_file = matches[0]
+            if not os.path.exists(downloaded_file):
+                video_id = info.get("id")
+                matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+                if matches:
+                    downloaded_file = matches[0]
 
-                if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
-                    return downloaded_file
-        except Exception as err2:
-            raise RuntimeError(
-                f"YouTube download error ({err2}). "
-                "Cloud server IP addresses (like Streamlit Cloud / AWS) are frequently blocked by YouTube (HTTP 403 Forbidden). "
-                "Please switch to the 'Upload Media File' option in the sidebar to upload your video/audio file directly!"
-            ) from err2
+            if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                return downloaded_file
+    except Exception as err2:
+        print(f"Modern fallback clients attempt failed ({err2}). Trying browser cookies fallback...")
+
+    # Attempt 3: If running locally without cookies.txt, attempt reading cookies from installed browsers
+    if not cookie_file:
+        for browser in ["chrome", "edge", "firefox", "brave"]:
+            try:
+                b_opts = dict(fallback_opts)
+                b_opts["cookiesfrombrowser"] = (browser,)
+                with yt_dlp.YoutubeDL(b_opts) as ydl:
+                    info = ydl.extract_info(target_url, download=True)
+                    downloaded_file = ydl.prepare_filename(info)
+
+                    if not os.path.exists(downloaded_file):
+                        video_id = info.get("id")
+                        matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+                        if matches:
+                            downloaded_file = matches[0]
+
+                    if os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 1000:
+                        print(f"⚡ Successfully downloaded using {browser} cookies!")
+                        return downloaded_file
+            except Exception:
+                continue
 
     if vid:
         matches = glob.glob(os.path.join(DOWNLOAD_DIR, f"{vid}.*"))
         if matches and os.path.getsize(matches[0]) > 1000:
             return matches[0]
 
-    raise RuntimeError("Downloaded audio file was not found after extraction.")
+    raise RuntimeError(
+        "YouTube blocked media stream download requests (anti-bot challenge / 403 Forbidden). "
+        "Please use the 'Upload Media File' option in the sidebar to upload your video/audio directly, "
+        "or export cookies via 'Get cookies.txt LOCALLY' extension into cookies.txt!"
+    )
 
 
 def chunk_audio(input_path: str, chunk_seconds: int = 600) -> list[str]:
@@ -179,12 +204,19 @@ def chunk_audio(input_path: str, chunk_seconds: int = 600) -> list[str]:
 
 
 def process_input(source: str, language: str = "english") -> list[str]:
-    if source.startswith(("http://", "https://")):
-        print(f"Detected YouTube URL. Downloading audio from: {source}")
-        audio_path = download_youtube_audio(source)
+    s = str(source).strip()
+    is_yt = (
+        s.startswith(("http://", "https://"))
+        or "youtube.com" in s
+        or "youtu.be" in s
+        or bool(_extract_yt_id(s))
+    )
+    if is_yt and not os.path.exists(s):
+        print(f"Detected YouTube source. Downloading audio from: {s}")
+        audio_path = download_youtube_audio(s)
     else:
         print("Detected local file.")
-        audio_path = source
+        audio_path = s
 
     # 25s pieces for Sarvam AI sync limit; 600s (10-min) chunks for Whisper
     chunk_sec = 25 if language.lower() == "hinglish" else 600

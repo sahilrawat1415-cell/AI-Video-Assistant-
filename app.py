@@ -24,7 +24,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.audio_processor import process_input, DOWNLOAD_DIR
-from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript
+from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript, extract_youtube_id
 from core.summarize import summarize, generate_title
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions, extract_all_insights
 from core.rag_engine import build_rag_chain, load_rag_chain, ask_question
@@ -44,6 +44,8 @@ def check_api_server(url: str = API_SERVER_URL) -> bool:
 def extract_video_id(source: str) -> str:
     """Extracts a clean unique identifier from a YouTube URL or file path."""
     s = str(source).strip()
+    if len(s) == 11 and re.match(r"^[a-zA-Z0-9_-]{11}$", s):
+        return s
     if "youtu.be/" in s:
         return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
     if "youtube.com/watch" in s:
@@ -1125,9 +1127,10 @@ def run_analysis_pipeline(target_source: str, target_lang: str):
 
         # ── Direct In-Process Pipeline ──
         transcript = None
-        # Fast Path for YouTube URLs: Check if direct transcript is available (bypasses audio downloading and cloud IP bot blocks)
-        if target_source.startswith(("http://", "https://")) and ("youtube.com" in target_source or "youtu.be" in target_source):
-            banner.info("⚡ Instant retrieval: Fetching YouTube transcript directly...")
+        # Fast Path for YouTube URLs & IDs: Check if direct transcript is available (bypasses audio downloading and cloud IP bot blocks)
+        yt_id = extract_youtube_id(target_source.strip())
+        if yt_id:
+            banner.info(f"⚡ Instant retrieval: Fetching YouTube transcript directly for '{yt_id}'...")
             mark_step("audio", "active")
             try:
                 transcript = get_youtube_transcript(target_source.strip())
