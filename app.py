@@ -75,10 +75,16 @@ st.markdown("""
     --text-muted: #585E6E;      /* Slate Taupe */
 }
 
-/* Global Reset & Typography - do NOT override icon ligature fonts */
-html, body, .stApp {
+/* Global Reset, Base Theme & Typography */
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--text);
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+[data-testid="stMainBlockContainer"],
+.main .block-container {
+    background-color: transparent !important;
 }
 
 /* Ensure Streamlit Material Symbols render as proper icons, not text ligatures */
