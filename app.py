@@ -963,23 +963,46 @@ with st.sidebar:
             source_path = saved_path
             st.caption(f"📁 Saved: `{uploaded_file.name}`")
 
-    with st.expander("🔑 Cloud YouTube Cookies (Optional)", expanded=False):
-        st.markdown(
-            "<span style='font-size:0.75rem;color:var(--text-muted)'>"
-            "Paste your exported YouTube <code>cookies.txt</code> to bypass cloud IP blocks:</span>",
-            unsafe_allow_html=True,
-        )
-        pasted_cookies = st.text_area(
-            "Paste Cookies Content",
-            placeholder="# Netscape HTTP Cookie File\n.youtube.com TRUE / ...",
-            height=90,
-            label_visibility="collapsed",
-            key="pasted_cookies_sidebar",
-        )
-        if pasted_cookies and len(pasted_cookies.strip()) > 20:
-            with open("cookies.txt", "w", encoding="utf-8") as f:
-                f.write(pasted_cookies.strip())
-            st.success("✅ Cookies saved to session!")
+    with st.expander("🔑 YouTube Cookies (Bypass Bot Checks)", expanded=False):
+        has_cookies = os.path.exists("cookies.txt") and os.path.getsize("cookies.txt") > 10
+        if has_cookies:
+            st.success("✅ `cookies.txt` is active & loaded!")
+            if st.button("🗑️ Remove Cookies", key="clear_cookies_btn", type="secondary", use_container_width=True):
+                try:
+                    os.remove("cookies.txt")
+                    st.rerun()
+                except Exception:
+                    pass
+        else:
+            st.markdown(
+                "<span style='font-size:0.75rem;color:var(--text-muted)'>"
+                "Upload or paste your exported <code>cookies.txt</code> from Chrome/Edge to bypass bot verification:</span>",
+                unsafe_allow_html=True,
+            )
+            up_cookie = st.file_uploader(
+                "Upload cookies.txt",
+                type=["txt"],
+                key="cookie_uploader_sidebar",
+                label_visibility="collapsed",
+            )
+            if up_cookie is not None:
+                with open("cookies.txt", "wb") as f:
+                    f.write(up_cookie.getbuffer())
+                st.success("✅ `cookies.txt` saved successfully!")
+                st.rerun()
+
+            pasted_cookies = st.text_area(
+                "Or paste cookies text directly",
+                placeholder="# Netscape HTTP Cookie File\n.youtube.com TRUE / ...",
+                height=70,
+                label_visibility="collapsed",
+                key="pasted_cookies_sidebar",
+            )
+            if pasted_cookies and len(pasted_cookies.strip()) > 20:
+                with open("cookies.txt", "w", encoding="utf-8") as f:
+                    f.write(pasted_cookies.strip())
+                st.success("✅ Cookies saved!")
+                st.rerun()
 
     st.markdown('<div class="card-header-label" style="margin-top:1rem">02 · Speech Model</div>', unsafe_allow_html=True)
     language = st.selectbox(
