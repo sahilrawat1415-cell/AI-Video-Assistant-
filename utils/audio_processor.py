@@ -28,18 +28,8 @@ def _extract_yt_id(url: str) -> str:
 
 
 def _get_cookie_file() -> str | None:
-    """Detects cookie file from disk or environment variables."""
-    candidates = [
-        "cookies.txt",
-        "www.youtube.com_cookies.txt",
-        "youtube.com_cookies.txt",
-        os.path.join(DOWNLOAD_DIR, "cookies.txt"),
-        os.path.join(DOWNLOAD_DIR, "www.youtube.com_cookies.txt"),
-    ]
-    for candidate in candidates:
-        if os.path.exists(candidate) and os.path.getsize(candidate) > 10:
-            return candidate
-
+    """Detects cookie file from disk, environment variables, or Streamlit secrets."""
+    # Check Streamlit secrets or environment variables first
     cookie_env = os.getenv("YOUTUBE_COOKIES") or os.getenv("COOKIES_TXT")
     if not cookie_env:
         try:
@@ -53,14 +43,30 @@ def _get_cookie_file() -> str | None:
         except Exception:
             pass
 
-    if cookie_env:
+    if cookie_env and isinstance(cookie_env, str) and len(cookie_env.strip()) > 10:
+        cleaned_cookies = cookie_env.strip()
+        if (cleaned_cookies.startswith("'''") and cleaned_cookies.endswith("'''")) or (cleaned_cookies.startswith('"""') and cleaned_cookies.endswith('"""')):
+            cleaned_cookies = cleaned_cookies[3:-3].strip()
+        target = os.path.abspath("cookies.txt")
         try:
-            target = "cookies.txt"
             with open(target, "w", encoding="utf-8") as f:
-                f.write(cookie_env)
+                f.write(cleaned_cookies + "\n")
             return target
         except Exception:
             pass
+
+    # Check candidates on disk
+    candidates = [
+        "cookies.txt",
+        "www.youtube.com_cookies.txt",
+        "youtube.com_cookies.txt",
+        os.path.join(DOWNLOAD_DIR, "cookies.txt"),
+        os.path.join(DOWNLOAD_DIR, "www.youtube.com_cookies.txt"),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate) and os.path.getsize(candidate) > 10:
+            return os.path.abspath(candidate)
+
     return None
 
 

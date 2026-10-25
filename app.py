@@ -23,7 +23,7 @@ except Exception:
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
-from utils.audio_processor import process_input, DOWNLOAD_DIR
+from utils.audio_processor import process_input, DOWNLOAD_DIR, _get_cookie_file
 from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript, extract_youtube_id
 from core.summarize import summarize, generate_title
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions, extract_all_insights
@@ -963,13 +963,17 @@ with st.sidebar:
             source_path = saved_path
             st.caption(f"📁 Saved: `{uploaded_file.name}`")
 
+    active_cookie = _get_cookie_file()
+    has_cookies = bool(active_cookie and os.path.exists(active_cookie) and os.path.getsize(active_cookie) > 10)
     with st.expander("🔑 YouTube Cookies (Bypass Bot Checks)", expanded=False):
-        has_cookies = os.path.exists("cookies.txt") and os.path.getsize("cookies.txt") > 10
         if has_cookies:
             st.success("✅ `cookies.txt` is active & loaded!")
             if st.button("🗑️ Remove Cookies", key="clear_cookies_btn", type="secondary", use_container_width=True):
                 try:
-                    os.remove("cookies.txt")
+                    if active_cookie and os.path.exists(active_cookie):
+                        os.remove(active_cookie)
+                    if os.path.exists("cookies.txt"):
+                        os.remove("cookies.txt")
                     st.rerun()
                 except Exception:
                     pass
