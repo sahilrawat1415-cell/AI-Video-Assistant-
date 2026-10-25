@@ -27,6 +27,16 @@ def _get_cookie_file() -> str | None:
             return candidate
 
     cookie_env = os.getenv("YOUTUBE_COOKIES") or os.getenv("COOKIES_TXT")
+    if not cookie_env:
+        try:
+            import streamlit as st
+            if "YOUTUBE_COOKIES" in st.secrets:
+                cookie_env = st.secrets["YOUTUBE_COOKIES"]
+            elif "COOKIES_TXT" in st.secrets:
+                cookie_env = st.secrets["COOKIES_TXT"]
+        except Exception:
+            pass
+
     if cookie_env:
         try:
             target = "cookies.txt"
