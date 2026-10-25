@@ -16,7 +16,9 @@ ENV/
 # Media & Database generated data
 downloades/
 vector_db/
+*cookies*.txt
 cookies.txt
+www.youtube.com_cookies.txt
 
 # Streamlit
 .streamlit/secrets.toml

@@ -29,7 +29,14 @@ def _extract_yt_id(url: str) -> str:
 
 def _get_cookie_file() -> str | None:
     """Detects cookie file from disk or environment variables."""
-    for candidate in ["cookies.txt", os.path.join(DOWNLOAD_DIR, "cookies.txt")]:
+    candidates = [
+        "cookies.txt",
+        "www.youtube.com_cookies.txt",
+        "youtube.com_cookies.txt",
+        os.path.join(DOWNLOAD_DIR, "cookies.txt"),
+        os.path.join(DOWNLOAD_DIR, "www.youtube.com_cookies.txt"),
+    ]
+    for candidate in candidates:
         if os.path.exists(candidate) and os.path.getsize(candidate) > 10:
             return candidate
 
