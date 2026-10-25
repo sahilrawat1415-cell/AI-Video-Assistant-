@@ -323,28 +323,24 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
                 pass
 
         raw_segments = None
-        # Try 1: with session / cookies with language preferences
+        # Try 1: clean default client (fastest, standard timedtext endpoint)
         try:
-            api = YouTubeTranscriptApi(http_client=session)
-            raw_segments = api.fetch(vid, languages=['en', 'en-US', 'en-GB', 'hi'])
+            api = YouTubeTranscriptApi()
+            raw_segments = api.fetch(vid)
         except Exception:
+            try:
+                api = YouTubeTranscriptApi()
+                raw_segments = api.fetch(vid, languages=['en', 'en-US', 'hi', 'en-orig'])
+            except Exception:
+                pass
+
+        # Try 2: with session / cookies if unauthenticated is restricted
+        if not raw_segments:
             try:
                 api = YouTubeTranscriptApi(http_client=session)
                 raw_segments = api.fetch(vid)
             except Exception:
                 pass
-
-        # Try 2: clean default client with language preferences
-        if not raw_segments:
-            try:
-                api = YouTubeTranscriptApi()
-                raw_segments = api.fetch(vid, languages=['en', 'en-US', 'en-GB', 'hi'])
-            except Exception:
-                try:
-                    api = YouTubeTranscriptApi()
-                    raw_segments = api.fetch(vid)
-                except Exception:
-                    pass
 
         # Try 3: legacy get_transcript API fallback
         if not raw_segments:
