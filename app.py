@@ -15,7 +15,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 
 from utils.audio_processor import process_input, DOWNLOAD_DIR
-from core.transcriber import transcribe_all, TranscriptResult
+from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript
 from core.summarize import summarize, generate_title
 import importlib
 import core.extractor
@@ -1111,22 +1111,40 @@ def run_analysis_pipeline(target_source: str, target_lang: str):
             st.rerun()
 
         # ── Direct In-Process Pipeline ──
-        # Step 1: Audio Processing & FFmpeg Chunking
-        banner.info("Step 1/3 — Downloading & stream-segmenting audio with FFmpeg...")
-        mark_step("audio", "active")
-        chunks = process_input(target_source.strip(), language=target_lang)
-        mark_step("audio", "done")
-        prog_bar.progress(25)
+        transcript = None
+        # Fast Path for YouTube URLs: Check if direct transcript is available (bypasses audio downloading and cloud IP bot blocks)
+        if target_source.startswith(("http://", "https://")) and ("youtube.com" in target_source or "youtu.be" in target_source):
+            banner.info("⚡ Instant retrieval: Fetching YouTube transcript directly...")
+            mark_step("audio", "active")
+            try:
+                transcript = get_youtube_transcript(target_source.strip())
+            except Exception as e:
+                print(f"Direct transcript error: {e}")
+                transcript = None
 
-        # Step 2: Parallel Transcription
-        mark_step("transcript", "active")
-        def on_chunk_done(done_count, total_count):
-            banner.info(f"Step 2/3 — Transcribing segment {done_count}/{total_count}...")
-            prog_bar.progress(25 + int(40 * (done_count / max(total_count, 1))))
+            if transcript:
+                mark_step("audio", "done")
+                mark_step("transcript", "done")
+                prog_bar.progress(65)
 
-        transcript = transcribe_all(chunks, language=target_lang, progress_callback=on_chunk_done)
-        mark_step("transcript", "done")
-        prog_bar.progress(65)
+        # Fallback to audio download & transcription if not a YouTube URL or direct transcript unavailable
+        if transcript is None:
+            # Step 1: Audio Processing & FFmpeg Chunking
+            banner.info("Step 1/3 — Downloading & stream-segmenting audio with FFmpeg...")
+            mark_step("audio", "active")
+            chunks = process_input(target_source.strip(), language=target_lang)
+            mark_step("audio", "done")
+            prog_bar.progress(25)
+
+            # Step 2: Parallel Transcription
+            mark_step("transcript", "active")
+            def on_chunk_done(done_count, total_count):
+                banner.info(f"Step 2/3 — Transcribing segment {done_count}/{total_count}...")
+                prog_bar.progress(25 + int(40 * (done_count / max(total_count, 1))))
+
+            transcript = transcribe_all(chunks, language=target_lang, progress_callback=on_chunk_done)
+            mark_step("transcript", "done")
+            prog_bar.progress(65)
 
         # Step 3: High-speed single-pass Insights + Chroma Vector Store in parallel
         banner.info("Step 3/3 — Synthesizing Intelligence Dossier & Indexing Chroma Vectors in parallel...")

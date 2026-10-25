@@ -263,3 +263,66 @@ def transcribe_all(chunks: list[str], language: str = "english", progress_callba
         segments=all_segments,
         timestamped_text=timestamped_text,
     )
+
+
+def extract_youtube_id(url: str) -> str:
+    """Extracts YouTube 11-char video ID from various URL formats."""
+    import re
+    if "youtu.be/" in url:
+        return url.split("youtu.be/")[1].split("?")[0].split("&")[0]
+    if "youtube.com/watch" in url:
+        m = re.search(r"[?&]v=([^&]+)", url)
+        if m:
+            return m.group(1)
+    return ""
+
+
+def get_youtube_transcript(url: str) -> TranscriptResult | None:
+    """
+    Attempts to fetch timestamped transcript directly via YouTube's public subtitle API.
+    Bypasses audio downloading, cloud IP restrictions, bot verification walls, and ffmpeg chunking.
+    """
+    vid = extract_youtube_id(url)
+    if not vid:
+        return None
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        api = YouTubeTranscriptApi()
+        try:
+            raw_segments = api.fetch(vid)
+        except AttributeError:
+            raw_segments = YouTubeTranscriptApi.get_transcript(vid)
+
+        segments = []
+        ts_lines = []
+        plain_parts = []
+        for item in raw_segments:
+            text = getattr(item, 'text', None) if not isinstance(item, dict) else item.get('text', '')
+            start = getattr(item, 'start', 0.0) if not isinstance(item, dict) else item.get('start', 0.0)
+            dur = getattr(item, 'duration', 0.0) if not isinstance(item, dict) else item.get('duration', 0.0)
+            if not text:
+                continue
+            text = text.replace('\n', ' ').strip()
+            ts_str = format_timestamp(start)
+            segments.append({
+                "start": start,
+                "end": start + dur,
+                "timestamp": ts_str,
+                "text": text,
+            })
+            ts_lines.append(f"[{ts_str}] {text}")
+            plain_parts.append(text)
+
+        if plain_parts:
+            full_text = " ".join(plain_parts)
+            timestamped_text = "\n".join(ts_lines)
+            print(f"⚡ Successfully retrieved direct YouTube transcript ({len(segments)} segments) for '{vid}'")
+            return TranscriptResult(
+                text=full_text,
+                segments=segments,
+                timestamped_text=timestamped_text,
+            )
+    except Exception as e:
+        print(f"Direct YouTube transcript fetch unavailable for '{vid}': {e}")
+        return None
+    return None

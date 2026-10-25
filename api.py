@@ -17,7 +17,7 @@ load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 # ── Core pipeline imports ────────────────────────────────────────────────────────
 from utils.audio_processor import process_input
-from core.transcriber import transcribe_all, TranscriptResult
+from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript
 from core.summarize import summarize, generate_title
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions, extract_all_insights
 from core.rag_engine import build_rag_chain, load_rag_chain, ask_question
@@ -117,13 +117,22 @@ def run_video_ingestion(video_url: str, language: str = "english") -> Dict[str, 
         t0 = time.time()
         video_id = extract_video_id(video_url)
 
-        # Step 1 — Audio download & FFmpeg chunking
-        chunks = process_input(video_url.strip(), language=language)
+        transcript = None
+        if video_url.startswith(("http://", "https://")) and ("youtube.com" in video_url or "youtu.be" in video_url):
+            try:
+                transcript = get_youtube_transcript(video_url.strip())
+            except Exception as e:
+                print(f"API direct transcript error: {e}")
+                transcript = None
 
-        # Step 2 — Parallel transcription with timestamps
-        transcript = transcribe_all(chunks, language=language)
-        if not transcript or not str(transcript).strip():
-            raise RuntimeError("Transcription returned empty text.")
+        if transcript is None:
+            # Step 1 — Audio download & FFmpeg chunking
+            chunks = process_input(video_url.strip(), language=language)
+
+            # Step 2 — Parallel transcription with timestamps
+            transcript = transcribe_all(chunks, language=language)
+            if not transcript or not str(transcript).strip():
+                raise RuntimeError("Transcription returned empty text.")
 
         timestamped_text = getattr(transcript, "timestamped_text", str(transcript))
 
