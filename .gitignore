@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Sensitive
+.env
+
+# Media & Database generated data
+downloades/
+vector_db/
+cookies.txt
+
+# Streamlit
+.streamlit/
