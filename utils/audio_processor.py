@@ -148,12 +148,14 @@ def download_youtube_audio(url: str) -> str:
         except Exception as err2:
             print(f"Attempt 2 (clean session) failed ({err2}). Retrying with mobile clients...")
 
-    # Attempt 3: Modern mobile/web clients (android, ios, mweb) with Chrome impersonation
+    # Attempt 3: Modern mobile/web clients (web, mweb, tv, android, ios) with Chrome impersonation
     fallback_opts = dict(base_opts)
+    if cookie_file:
+        fallback_opts["cookiefile"] = cookie_file
     fallback_opts["format"] = "bestaudio/best"
     fallback_opts["extractor_args"] = {
         "youtube": {
-            "player_client": ["android", "ios", "mweb", "web_safari"],
+            "player_client": ["web", "mweb", "tv", "android", "ios"],
         }
     }
     try:
