@@ -11,12 +11,17 @@ import re
 
 
 def _extract_yt_id(url: str) -> str:
-    if "youtu.be/" in url:
-        return url.split("youtu.be/")[1].split("?")[0].split("&")[0]
-    if "youtube.com/watch" in url:
-        m = re.search(r"[?&]v=([^&]+)", url)
+    s = str(url).strip()
+    if "youtu.be/" in s:
+        return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
+    if "youtube.com/watch" in s:
+        m = re.search(r"[?&]v=([^&]+)", s)
         if m:
             return m.group(1)
+    if "youtube.com/shorts/" in s:
+        return s.split("youtube.com/shorts/")[1].split("?")[0].split("&")[0]
+    if "youtube.com/embed/" in s:
+        return s.split("youtube.com/embed/")[1].split("?")[0].split("&")[0]
     return ""
 
 

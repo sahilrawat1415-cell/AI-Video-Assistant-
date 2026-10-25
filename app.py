@@ -45,6 +45,23 @@ def check_api_server(url: str = API_SERVER_URL) -> bool:
         return False
 
 
+def extract_video_id(source: str) -> str:
+    """Extracts a clean unique identifier from a YouTube URL or file path."""
+    s = str(source).strip()
+    if "youtu.be/" in s:
+        return s.split("youtu.be/")[1].split("?")[0].split("&")[0]
+    if "youtube.com/watch" in s:
+        m = re.search(r"[?&]v=([^&]+)", s)
+        if m:
+            return m.group(1)
+    if "youtube.com/shorts/" in s:
+        return s.split("youtube.com/shorts/")[1].split("?")[0].split("&")[0]
+    if "youtube.com/embed/" in s:
+        return s.split("youtube.com/embed/")[1].split("?")[0].split("&")[0]
+    base = os.path.splitext(os.path.basename(s))[0]
+    return re.sub(r"[^a-zA-Z0-9_-]", "_", base)[:40] or "meeting_session"
+
+
 # ─── Page Config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Video Assistant · RAG Intelligence",
