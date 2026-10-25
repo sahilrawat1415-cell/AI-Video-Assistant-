@@ -291,12 +291,29 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
     if not vid:
         return None
     try:
-        from youtube_transcript_api import YouTubeTranscriptApi
-        api = YouTubeTranscriptApi()
+        from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore
+        import http.cookiejar
+        from utils.audio_processor import _get_cookie_file
+
+        session = requests.Session()
+        cookie_file = _get_cookie_file()
+        if cookie_file and os.path.exists(cookie_file):
+            try:
+                jar = http.cookiejar.MozillaCookieJar(cookie_file)
+                jar.load(ignore_discard=True, ignore_expires=True)
+                session.cookies = jar
+            except Exception:
+                pass
+
         try:
+            api = YouTubeTranscriptApi(http_client=session)
             raw_segments = api.fetch(vid)
-        except AttributeError:
-            raw_segments = YouTubeTranscriptApi.get_transcript(vid)
+        except (AttributeError, TypeError):
+            try:
+                api = YouTubeTranscriptApi()
+                raw_segments = api.fetch(vid)
+            except (AttributeError, TypeError):
+                raw_segments = YouTubeTranscriptApi.get_transcript(vid)
 
         segments = []
         ts_lines = []
