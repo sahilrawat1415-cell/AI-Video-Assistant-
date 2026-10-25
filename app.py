@@ -948,6 +948,24 @@ with st.sidebar:
             source_path = saved_path
             st.caption(f"📁 Saved: `{uploaded_file.name}`")
 
+    with st.expander("🔑 Cloud YouTube Cookies (Optional)", expanded=False):
+        st.markdown(
+            "<span style='font-size:0.75rem;color:var(--text-muted)'>"
+            "Paste your exported YouTube <code>cookies.txt</code> to bypass cloud IP blocks:</span>",
+            unsafe_allow_html=True,
+        )
+        pasted_cookies = st.text_area(
+            "Paste Cookies Content",
+            placeholder="# Netscape HTTP Cookie File\n.youtube.com TRUE / ...",
+            height=90,
+            label_visibility="collapsed",
+            key="pasted_cookies_sidebar",
+        )
+        if pasted_cookies and len(pasted_cookies.strip()) > 20:
+            with open("cookies.txt", "w", encoding="utf-8") as f:
+                f.write(pasted_cookies.strip())
+            st.success("✅ Cookies saved to session!")
+
     st.markdown('<div class="card-header-label" style="margin-top:1rem">02 · Speech Model</div>', unsafe_allow_html=True)
     language = st.selectbox(
         "Speech Model Language",

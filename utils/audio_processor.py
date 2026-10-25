@@ -34,6 +34,8 @@ def _get_cookie_file() -> str | None:
                 cookie_env = st.secrets["YOUTUBE_COOKIES"]
             elif "COOKIES_TXT" in st.secrets:
                 cookie_env = st.secrets["COOKIES_TXT"]
+            elif "youtube" in st.secrets and isinstance(st.secrets["youtube"], dict) and "cookies_text" in st.secrets["youtube"]:
+                cookie_env = st.secrets["youtube"]["cookies_text"]
         except Exception:
             pass
 
