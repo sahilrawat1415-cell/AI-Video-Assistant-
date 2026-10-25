@@ -309,10 +309,15 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
         return None
     try:
         from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore
+        from youtube_transcript_api._transcripts import _TranscriptParser
         import http.cookiejar
         from utils.audio_processor import _get_cookie_file
 
         session = requests.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+        })
         cookie_file = _get_cookie_file()
         if cookie_file and os.path.exists(cookie_file):
             try:
@@ -323,26 +328,46 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
                 pass
 
         raw_segments = None
-        # Try 1: clean default client (fastest, standard timedtext endpoint)
-        try:
-            api = YouTubeTranscriptApi()
-            raw_segments = api.fetch(vid)
-        except Exception:
-            try:
-                api = YouTubeTranscriptApi()
-                raw_segments = api.fetch(vid, languages=['en', 'en-US', 'hi', 'en-orig'])
-            except Exception:
-                pass
 
-        # Try 2: with session / cookies if unauthenticated is restricted
+        # Strategy 1: Use session/cookies for discovery, but fetch timedtext cleanly (fixes AWS bot blocks + 502 Bad Gateway)
+        clients_to_try = [session] if (cookie_file and os.path.exists(cookie_file)) else [None, session]
+        if None not in clients_to_try:
+            clients_to_try.append(None)
+
+        for client in clients_to_try:
+            try:
+                api = YouTubeTranscriptApi(http_client=client) if client else YouTubeTranscriptApi()
+                t_list = api.list(vid)
+                t = None
+                try:
+                    t = t_list.find_transcript(['en', 'en-US', 'en-GB', 'hi', 'en-orig'])
+                except Exception:
+                    for item in t_list:
+                        t = item
+                        break
+                if t and hasattr(t, "_url") and t._url:
+                    # Crucial: fetch timedtext URL with clean requests (no session cookies) to prevent 502 Bad Gateway
+                    resp = requests.get(t._url, timeout=15)
+                    if resp.status_code == 200 and resp.text:
+                        raw_segments = _TranscriptParser().parse(resp.text)
+                        if raw_segments:
+                            break
+            except Exception as e_disc:
+                print(f"Transcript discovery attempt failed: {e_disc}")
+
+        # Strategy 2: Direct api.fetch fallback
         if not raw_segments:
             try:
-                api = YouTubeTranscriptApi(http_client=session)
+                api = YouTubeTranscriptApi()
                 raw_segments = api.fetch(vid)
             except Exception:
-                pass
+                try:
+                    api = YouTubeTranscriptApi()
+                    raw_segments = api.fetch(vid, languages=['en', 'en-US', 'hi'])
+                except Exception:
+                    pass
 
-        # Try 3: legacy get_transcript API fallback
+        # Strategy 3: Legacy get_transcript API fallback
         if not raw_segments:
             try:
                 if hasattr(YouTubeTranscriptApi, "get_transcript"):
