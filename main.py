@@ -14,11 +14,21 @@ def run_pipeline(source: str, language: str = "english") -> dict:
     start_time = time.time()
     print(" Starting AI Video Assistant...")
 
-    # Step 1: Fast FFmpeg Audio Processing & Chunking
-    chunks = process_input(source, language=language)
+    transcript = None
+    if source.strip().startswith(("http://", "https://")):
+        try:
+            from core.transcriber import get_youtube_transcript
+            transcript = get_youtube_transcript(source.strip())
+        except Exception:
+            transcript = None
 
-    # Step 2: Parallel Transcription with Timestamps
-    transcript = transcribe_all(chunks, language=language)
+    if transcript is None:
+        # Step 1: Fast FFmpeg Audio Processing & Chunking
+        chunks = process_input(source, language=language)
+
+        # Step 2: Parallel Transcription with Timestamps
+        transcript = transcribe_all(chunks, language=language)
+
     timestamped = getattr(transcript, "timestamped_text", str(transcript))
     print(f"\n Timestamped Transcription Preview:\n{timestamped[:350]}...\n")
 

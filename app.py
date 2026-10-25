@@ -11,6 +11,15 @@ ENV_FILE = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=ENV_FILE, override=True)
 
 import streamlit as st
+
+# Sync Streamlit Cloud secrets into os.environ
+try:
+    for k, v in st.secrets.items():
+        if isinstance(v, str) and k not in os.environ:
+            os.environ[k] = v
+except Exception:
+    pass
+
 import requests
 from concurrent.futures import ThreadPoolExecutor
 

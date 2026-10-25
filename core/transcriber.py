@@ -61,11 +61,19 @@ def get_groq_client():
     """Create the Groq client lazily."""
     global _groq_client
     if _groq_client is None:
-        if not GROQ_API_KEY:
+        key = GROQ_API_KEY or os.getenv("GROQ_API_KEY", "").strip()
+        if not key:
+            try:
+                import streamlit as st
+                if "GROQ_API_KEY" in st.secrets:
+                    key = str(st.secrets["GROQ_API_KEY"]).strip()
+            except Exception:
+                pass
+        if not key:
             raise RuntimeError(
-                "GROQ_API_KEY is missing. Check the project's .env file."
+                "GROQ_API_KEY is missing. Check the project's .env file or Streamlit Cloud Secrets."
             )
-        _groq_client = Groq(api_key=GROQ_API_KEY)
+        _groq_client = Groq(api_key=key)
     return _groq_client
 
 
@@ -129,14 +137,21 @@ def transcribe_chunk_whisper(chunk_path: str, chunk_offset_sec: float = 0.0) -> 
 
 def transcribe_chunk_sarvam(piece_path: str, chunk_offset_sec: float = 0.0) -> dict:
     """Transcribe one chunk with Sarvam AI."""
-    if not SARVAM_API_KEY:
+    sarvam_key = SARVAM_API_KEY or os.getenv("SARVAM_API_KEY", "").strip()
+    if not sarvam_key:
+        try:
+            import streamlit as st
+            if "SARVAM_API_KEY" in st.secrets:
+                sarvam_key = str(st.secrets["SARVAM_API_KEY"]).strip()
+        except Exception:
+            pass
+    if not sarvam_key:
         raise RuntimeError(
-            "SARVAM_API_KEY was not loaded. Checked: "
-            f"{ENV_FILE}. Confirm the .env variable is named exactly "
-            "SARVAM_API_KEY and restart Streamlit."
+            "SARVAM_API_KEY was not loaded. Confirm the .env variable or Streamlit secret is named exactly "
+            "SARVAM_API_KEY."
         )
 
-    headers = {"api-subscription-key": SARVAM_API_KEY}
+    headers = {"api-subscription-key": sarvam_key}
     with open(piece_path, "rb") as audio_file:
         files = {
             "file": (

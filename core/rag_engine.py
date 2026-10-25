@@ -28,9 +28,17 @@ Context from meeting transcript:
 
 
 def get_llm():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        try:
+            import streamlit as st
+            if "GROQ_API_KEY" in st.secrets:
+                api_key = str(st.secrets["GROQ_API_KEY"]).strip()
+        except Exception:
+            pass
     return ChatGroq(
         model="qwen/qwen3.8-27b",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
+        groq_api_key=api_key,
         max_tokens=650,
         temperature=0.3,
     )

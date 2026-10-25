@@ -6,10 +6,22 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
+def _get_groq_api_key() -> str | None:
+    key = os.getenv("GROQ_API_KEY")
+    if not key:
+        try:
+            import streamlit as st
+            if "GROQ_API_KEY" in st.secrets:
+                key = str(st.secrets["GROQ_API_KEY"]).strip()
+        except Exception:
+            pass
+    return key
+
+
 def get_llm(max_tokens: int = 700):
     return ChatGroq(
         model="qwen/qwen3.8-27b",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
+        groq_api_key=_get_groq_api_key(),
         temperature=0.2,
         max_tokens=max_tokens,
     )

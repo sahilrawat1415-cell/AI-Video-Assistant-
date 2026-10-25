@@ -5,10 +5,22 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 
+def _get_groq_api_key() -> str | None:
+    key = os.getenv("GROQ_API_KEY")
+    if not key:
+        try:
+            import streamlit as st
+            if "GROQ_API_KEY" in st.secrets:
+                key = str(st.secrets["GROQ_API_KEY"]).strip()
+        except Exception:
+            pass
+    return key
+
+
 def get_llm():
     return ChatGroq(
         model="qwen/qwen3.8-27b",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
+        groq_api_key=_get_groq_api_key(),
         temperature=0.3,
         max_tokens=800,
     )
@@ -155,7 +167,7 @@ def extract_all_insights(transcript: str) -> dict:
 
     llm = ChatGroq(
         model="qwen/qwen3.8-27b",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
+        groq_api_key=_get_groq_api_key(),
         temperature=0.2,
         max_tokens=1500,
     )
