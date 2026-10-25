@@ -1,5 +1,11 @@
 # AI Video Assistant With RAG & Multilingual Intelligence
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ai-video-summary.streamlit.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/sahilrawat1415-cell/AI-Video-Assistant-)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
+
+🌐 **Live Demo Web App**: [https://ai-video-summary.streamlit.app/](https://ai-video-summary.streamlit.app/)
+
 An enterprise-ready AI meeting and video intelligence system built with **FastAPI**, **Streamlit**, **LangChain**, **Groq**, **Sarvam AI**, and **ChromaDB**. It transcribes English and Hinglish videos, generates structured executive insights, and provides timestamp-grounded Retrieval-Augmented Generation (RAG) chat.
 
 ---
@@ -109,12 +115,14 @@ USE_LOCAL_WHISPER="false"
 
 ## Running the Application
 
-### Option A: Streamlit Web UI (All-in-One)
+### Option A: Streamlit Web UI (Live Demo or Local)
 
-```powershell
-streamlit run app.py
-```
-Open **`http://localhost:8501`** in your browser.
+* 🚀 **Live Hosted App**: [https://ai-video-summary.streamlit.app/](https://ai-video-summary.streamlit.app/)
+* 🏠 **Run Locally**:
+  ```powershell
+  streamlit run app.py
+  ```
+  Open **`http://localhost:8501`** in your browser.
 
 > [!TIP]
 > `app.py` auto-detects whether the FastAPI server is running. If running, it delegates processing over HTTP; if not, it automatically runs in-process with zero configuration!
