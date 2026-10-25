@@ -320,15 +320,31 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
             except Exception:
                 pass
 
+        raw_segments = None
+        # Try 1: with session / cookies
         try:
             api = YouTubeTranscriptApi(http_client=session)
             raw_segments = api.fetch(vid)
-        except (AttributeError, TypeError):
+        except Exception:
+            pass
+
+        # Try 2: clean default client
+        if not raw_segments:
             try:
                 api = YouTubeTranscriptApi()
                 raw_segments = api.fetch(vid)
-            except (AttributeError, TypeError):
+            except Exception:
+                pass
+
+        # Try 3: legacy get_transcript API
+        if not raw_segments:
+            try:
                 raw_segments = YouTubeTranscriptApi.get_transcript(vid)
+            except Exception:
+                pass
+
+        if not raw_segments:
+            return None
 
         segments = []
         ts_lines = []

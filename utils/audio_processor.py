@@ -76,6 +76,8 @@ def download_youtube_audio(url: str) -> str:
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
         },
+        "socket_timeout": 10,
+        "retries": 1,
         "quiet": True,
         "no_warnings": True,
     }

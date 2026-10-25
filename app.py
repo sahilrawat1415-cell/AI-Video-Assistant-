@@ -26,22 +26,9 @@ from concurrent.futures import ThreadPoolExecutor
 from utils.audio_processor import process_input, DOWNLOAD_DIR
 from core.transcriber import transcribe_all, TranscriptResult, get_youtube_transcript
 from core.summarize import summarize, generate_title
-import importlib
-import core.extractor
-importlib.reload(core.extractor)
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions, extract_all_insights
-
-try:
-    from core.rag_engine import build_rag_chain, load_rag_chain, ask_question
-    from core.vector_store import list_indexed_videos
-except ImportError:
-    import importlib
-    import core.vector_store
-    import core.rag_engine
-    importlib.reload(core.vector_store)
-    importlib.reload(core.rag_engine)
-    from core.rag_engine import build_rag_chain, load_rag_chain, ask_question
-    from core.vector_store import list_indexed_videos
+from core.rag_engine import build_rag_chain, load_rag_chain, ask_question
+from core.vector_store import list_indexed_videos
 
 API_SERVER_URL = os.getenv("API_SERVER_URL", "http://localhost:8000")
 
@@ -1227,11 +1214,13 @@ def run_analysis_pipeline(target_source: str, target_lang: str):
         prog_bar.empty()
         err_msg = str(e)
         banner.error(f"Pipeline Error: {err_msg}")
-        if "403" in err_msg or "Forbidden" in err_msg:
+        if any(w in err_msg for w in ["403", "Forbidden", "bot", "reloaded", "download error"]):
             st.warning(
-                "💡 **YouTube 403 Forbidden Fix:**\n\n"
-                "Cloud datacenter IP addresses (like Streamlit Cloud / AWS) are frequently blocked by YouTube's anti-bot system.\n\n"
-                "**Recommended Action:** Use the **'Upload Media File'** option on the sidebar to upload your video/audio file directly!"
+                "💡 **YouTube Cloud IP Block Notice (Streamlit Cloud / AWS):**\n\n"
+                "YouTube datacenter cloud servers (AWS EC2) ko direct audio downloads se block karta hai.\n\n"
+                "**Kaise Chalana Hai (2 Easy Options):**\n"
+                "1. 🏠 **Local Machine Par Chalao:** Browser mein `http://localhost:8501` open karo — aapke laptop/home internet par YouTube 100% seamlessly download karega!\n"
+                "2. ☁️ **Streamlit Cloud Par:** Left sidebar se **'Upload Media File'** select karke audio/video file directly upload kar do, ya neeche **Instant Demo Links** click karke dekho!"
             )
 
 
