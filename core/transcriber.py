@@ -311,14 +311,35 @@ def get_youtube_transcript(url: str) -> TranscriptResult | None:
         from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore
         from youtube_transcript_api._transcripts import _TranscriptParser
         import http.cookiejar
-        from utils.audio_processor import _get_cookie_file
+
+        # NOTE: Do NOT import from utils.audio_processor here — that module imports yt_dlp
+        # at module level. If yt-dlp fails to install on the server (e.g. Streamlit Cloud),
+        # the ImportError would bubble up and kill the entire fast-path transcript fetch,
+        # even though it doesn't need yt-dlp at all. Detect cookies inline instead.
+        def _get_cookie_file_safe():
+            try:
+                from utils.audio_processor import _get_cookie_file as _gcf
+                return _gcf()
+            except Exception:
+                pass
+            candidates = [
+                os.path.abspath("cookies.txt"),
+                os.path.join(PROJECT_ROOT, "cookies.txt"),
+            ]
+            for c in candidates:
+                try:
+                    if os.path.exists(c) and os.path.getsize(c) > 10:
+                        return c
+                except OSError:
+                    continue
+            return None
 
         session = requests.Session()
         session.headers.update({
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9",
         })
-        cookie_file = _get_cookie_file()
+        cookie_file = _get_cookie_file_safe()
         if cookie_file and os.path.exists(cookie_file):
             try:
                 jar = http.cookiejar.MozillaCookieJar(cookie_file)
